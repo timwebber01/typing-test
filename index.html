@@ -214,11 +214,11 @@
 
         <div id="results" class="results">
             <div class="proposal-text">
-                Will you be my Valentine and my Girlfriend? :)
+                Will you be my Valentine and... <br> my Girlfriend? :)
             </div>
             <div class="yes-buttons">
                 <button class="yes-btn" id="yes-normal">Yes</button>
-                <button class="yes-btn yes-bold" id="yes-bold">Yes, but in bold</button>
+                <button class="yes-btn yes-bold" id="yes-bold">Yes</button>
             </div>
         </div>
     </div>
@@ -227,22 +227,24 @@
         <a href="#">Valentine's Typing Challenge – made with ❤️</a>
     </div>
 
-    <!-- Load confetti library from CDN -->
+    <!-- Confetti library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const COMMON_WORDS = ['the','be','to','of','and','a','in','that','have','I','it','for','not','on','with','he','as','you','do','at','this','but','his','by','from','they','we','say','her','she','or','an','will','my','one','all','would','there','their','what','so','up','out','if','about','who','get','which','go','me','when','make','can','like','time','no','just','him','know','take','people','into','year','your','good','some','could','them','see','other','than','then','now','look','only','come','its','over','think','also','back','after','use','two','how','our','work','first','well','way','even','new','want','because','any','these','give','day','most','us'];
 
+        // Updated: tight, sweet & personal group
         const ROMANTIC_PHASE1 = [
-            'you','are','so','funny','your','smile','makes','my','day','your','laugh','is','contagious','talking','to','you','feels','easy','you','have','great','taste','in','music','you','always','know','how','to','make','me','grin','your','vibe','is','really','nice'
+            'sweet','caring','hug','kiss','cuddle','cute','polaroid',
+            'Salt','Lake','City','San','Francisco','Finbar',
+            'snowboarding','skiing','koala'
         ];
 
-        const ROMANTIC_PHASE2 = [
-            'hey','I','keep','thinking','about','our','last','chat','it','was','really','nice','being','around','you','feels','comfortable','and','fun','I','like','how','we','just','click','you','make','ordinary','moments','feel','better','you','are','easy','to','be','around'
-        ];
+        // Phase 2 now uses the same tight list (no need for two phases anymore)
+        const ROMANTIC_PHASE2 = ROMANTIC_PHASE1;
 
-        const PROPOSAL = "Will you be Tim's Valentine?";
+        const PROPOSAL = "Will you be my Valentine?";
         const SECRET_ANSWER = "girlfriend";
 
         const WORD_LENGTH = 5;
@@ -355,8 +357,7 @@
             }
 
             let words = shuffle(COMMON_WORDS).slice(0, 35);
-            words = words.concat(shuffle(ROMANTIC_PHASE1).slice(0, 50));
-            words = words.concat(shuffle(ROMANTIC_PHASE2).slice(0, 45));
+            words = words.concat(shuffle(ROMANTIC_PHASE1).slice(0, 70)); // more instances so the personal words appear often
             words.push(...PROPOSAL.split(' '));
 
             state.currentText = words.join(' ');
@@ -489,11 +490,9 @@
             els.resultsEl.style.display = 'flex';
         }
 
-        // ──────────────────────────────────────────────
-        // Confetti when clicking Yes buttons
-        // ──────────────────────────────────────────────
+        // Confetti on Yes click
         function fireConfetti() {
-            const duration = 4 * 1000;
+            const duration = 5000;
             const animationEnd = Date.now() + duration;
             const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
 
@@ -510,13 +509,11 @@
 
                 const particleCount = 50 * (timeLeft / duration);
 
-                // left side
                 confetti(Object.assign({}, defaults, {
                     particleCount,
                     origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
                 }));
 
-                // right side
                 confetti(Object.assign({}, defaults, {
                     particleCount,
                     origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
@@ -524,7 +521,6 @@
             }, 250);
         }
 
-        // Attach confetti to both Yes buttons
         document.getElementById('yes-normal')?.addEventListener('click', fireConfetti);
         document.getElementById('yes-bold')?.addEventListener('click', fireConfetti);
 
