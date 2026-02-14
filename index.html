@@ -121,43 +121,51 @@
         #typing-input { position: absolute; left: -9999px; opacity: 0; }
 
         .results {
-            display: none; flex-direction: column; align-items: center; gap: 1.5rem;
-            width: 100%; max-width: 700px;
+            display: none; flex-direction: column; align-items: center; gap: 2.5rem;
+            width: 100%; max-width: 700px; padding: 2rem;
         }
 
-        #result-wpm { font-size: 5rem; color: var(--correct-color); font-weight: bold; }
-
-        #result-wpm .label { font-size: 2rem; color: var(--text-color); margin-left: 0.5rem; }
-
-        .results-details {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem 3rem;
-            width: 100%; max-width: 500px; font-size: 1.1rem;
+        .proposal-text {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--correct-color);
+            line-height: 1.3;
+            text-align: center;
+            max-width: 90%;
         }
 
-        .results-details div { color: var(--subtle-text-color); }
-        .results-details span { display: block; font-size: 2rem; font-weight: bold; color: var(--text-color); }
-
-        #result-chars .val { font-size: 1.5rem; color: var(--text-color); }
-        #result-chars .correct { color: var(--correct-color); }
-        #result-chars .incorrect { color: var(--error-color); }
-
-        #restart-btn {
-            background: var(--primary-color); color: var(--background-color);
-            border: none; padding: 0.8rem 2.5rem; border-radius: 5px; cursor: pointer;
-            font-size: 1.2rem; margin-top: 1.5rem;
+        .yes-buttons {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
-        #restart-btn:hover { opacity: 0.9; transform: scale(1.04); }
+        .yes-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.6rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 160px;
+        }
+
+        .yes-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 25px rgba(255, 121, 198, 0.6);
+        }
+
+        .yes-bold {
+            font-weight: 900;
+        }
 
         @media (max-width: 768px) {
-            .container { gap: 1.5rem; }
-            .settings { flex-direction: column; gap: 1.5rem; }
-            .stats { font-size: 1.2rem; }
-            .words-container { font-size: 1.5rem; max-height: calc(1.5rem * var(--line-height) * 3); }
-            #cursor { height: 2rem; }
-            #result-wpm { font-size: 4rem; }
-            #result-wpm .label { font-size: 1.5rem; }
-            .results-details { grid-template-columns: 1fr; max-width: 300px; text-align: center; }
+            .proposal-text { font-size: 2.8rem; }
+            .yes-btn { font-size: 1.4rem; padding: 0.9rem 2rem; }
+            .yes-buttons { flex-direction: column; gap: 1.5rem; }
         }
     </style>
 </head>
@@ -205,22 +213,22 @@
         <input type="text" id="typing-input" autofocus>
 
         <div id="results" class="results">
-            <h2 id="result-wpm">0<span class="label">WPM</span></h2>
-            <div class="results-details">
-                <div>Test<span id="result-info">60s • words</span></div>
-                <div>Accuracy<span id="result-accuracy">0%</span></div>
-                <div>Raw WPM<span id="result-raw-wpm">0</span></div>
-                <div id="result-chars">Chars<span class="val">
-                    <span class="correct">0</span> / <span class="incorrect">0</span>
-                </span></div>
+            <div class="proposal-text">
+                Will you be my Valentine and my Girlfriend? :)
             </div>
-            <button id="restart-btn">Try Again</button>
+            <div class="yes-buttons">
+                <button class="yes-btn" id="yes-normal">Yes</button>
+                <button class="yes-btn yes-bold" id="yes-bold">Yes, but in bold</button>
+            </div>
         </div>
     </div>
 
     <div id="watermark">
         <a href="#">Valentine's Typing Challenge – made with ❤️</a>
     </div>
+
+    <!-- Load confetti library from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -247,18 +255,12 @@
             timerEl: document.getElementById('timer'),
             wpmEl: document.getElementById('wpm'),
             resultsEl: document.getElementById('results'),
-            restartBtn: document.getElementById('restart-btn'),
             cursor: document.getElementById('cursor'),
             timeSettings: document.getElementById('time-settings'),
             modeSettings: document.getElementById('mode-settings'),
             themeSelector: document.getElementById('theme-selector'),
             customTextContainer: document.getElementById('custom-text-container'),
             customTextInput: document.getElementById('custom-text-input'),
-            resultWpm: document.querySelector('#result-wpm'),
-            resultInfo: document.getElementById('result-info'),
-            resultAccuracy: document.getElementById('result-accuracy'),
-            resultRawWpm: document.getElementById('result-raw-wpm'),
-            resultChars: document.getElementById('result-chars'),
         };
 
         let state = {
@@ -288,8 +290,6 @@
             els.typingInput.addEventListener('keydown', handleKeyDown);
             els.typingInput.addEventListener('focus', () => els.wordsContainer.classList.remove('unfocused'));
             els.typingInput.addEventListener('blur', () => els.wordsContainer.classList.add('unfocused'));
-
-            els.restartBtn.addEventListener('click', startGame);
 
             els.timeSettings.addEventListener('click', e => {
                 if (e.target.tagName === 'BUTTON') {
@@ -411,13 +411,11 @@
             updateCursor();
             updateWPM();
 
-            // Only end if we have typed the secret answer (girlfriend) in the zone
             if (state.charIndex >= spans.length) {
                 const typedEnd = value.slice(valentineStart).toLowerCase().trim();
                 if (typedEnd.startsWith(SECRET_ANSWER.toLowerCase())) {
-                    endGame(true);
+                    endGame();
                 }
-                // otherwise keep going (even if text is "finished")
             }
         }
 
@@ -482,37 +480,53 @@
             }
         }
 
-        function endGame(completed = false) {
+        function endGame() {
             clearInterval(state.timerInterval);
             state.isTestActive = false;
             state.testFinished = true;
             els.typingInput.blur();
+            els.typingArea.style.display = 'none';
+            els.resultsEl.style.display = 'flex';
+        }
 
-            const takenMin = (state.timeLimit - Math.max(0, state.timeLeft)) / 60 || 0.0001;
-            const total = state.correctChars + state.incorrectChars;
+        // ──────────────────────────────────────────────
+        // Confetti when clicking Yes buttons
+        // ──────────────────────────────────────────────
+        function fireConfetti() {
+            const duration = 4 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
 
-            const net   = Math.round((state.correctChars / WORD_LENGTH) / takenMin);
-            const raw   = Math.round((total / WORD_LENGTH) / takenMin);
-            const acc   = total > 0 ? Math.round((state.correctChars / total) * 100) : 0;
-
-            let title = `${net}<span class="label">WPM</span>`;
-            const endTyped = els.typingInput.value.slice(-40).toLowerCase();
-
-            if (endTyped.includes(SECRET_ANSWER) || completed) {
-                title = `YES!! 💕<br><span style="font-size:2.2rem;">Girlfriend mode: activated</span>`;
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
             }
 
-            els.resultWpm.innerHTML = title;
-            els.resultInfo.textContent = `${state.timeLimit}s • ${state.testMode} (Valentine edition)`;
-            els.resultAccuracy.textContent = `${acc}%`;
-            els.resultRawWpm.textContent = raw;
-            els.resultChars.innerHTML = `Chars<span class="val">
-                <span class="correct">${state.correctChars}</span> / <span class="incorrect">${state.incorrectChars}</span>
-            </span>`;
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
 
-            els.resultsEl.style.display = 'flex';
-            els.typingArea.style.display = 'none';
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+
+                // left side
+                confetti(Object.assign({}, defaults, {
+                    particleCount,
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                }));
+
+                // right side
+                confetti(Object.assign({}, defaults, {
+                    particleCount,
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                }));
+            }, 250);
         }
+
+        // Attach confetti to both Yes buttons
+        document.getElementById('yes-normal')?.addEventListener('click', fireConfetti);
+        document.getElementById('yes-bold')?.addEventListener('click', fireConfetti);
 
         function setTheme(theme) {
             document.body.dataset.theme = theme;
